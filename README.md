@@ -4,7 +4,7 @@
 
 A macOS menubar app that audits and cleans the caches generic Mac cleaners miss — Claude Code agent VMs, opencode session snapshots, `node_modules` across many projects, Ollama models, Electron app partitions, Xcode artifacts, and the usual suspects.
 
-Built in a day as Ship Season 01, Day 6. See the field-notes presentation: [when-claude-got-weak.html](https://github.com/rikventure/disk-doctor#story).
+Built in a day as Ship Season 01, Day 6. See the field-notes presentation: [when-claude-got-weak.html](https://github.com/midcurvelabs/disk-doctor#story).
 
 ## What it knows about
 
@@ -32,7 +32,7 @@ Download the latest `.dmg` from [Releases](../../releases).
 Or build from source:
 
 ```bash
-git clone https://github.com/rikventure/disk-doctor
+git clone https://github.com/midcurvelabs/disk-doctor
 cd disk-doctor
 pnpm install
 pnpm tauri dev      # local dev

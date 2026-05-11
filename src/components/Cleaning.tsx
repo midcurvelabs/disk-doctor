@@ -1,15 +1,9 @@
 export function Cleaning() {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-      <div className="font-mono text-[11px] tracking-[0.22em] uppercase text-accent">
-        Cleaning
-      </div>
-      <div className="text-lg text-fg-2">
-        Removing caches and writing a record.
-      </div>
-      <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted">
-        Don't quit yet.
-      </div>
+    <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+      <div className="size-5 animate-spin rounded-full border-2 border-fg-3 border-t-blue" />
+      <div className="text-[13px] text-fg-2">Cleaning…</div>
+      <div className="text-[11px] text-fg-3">Don't quit yet.</div>
     </div>
   );
 }

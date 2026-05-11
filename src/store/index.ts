@@ -8,8 +8,12 @@ import {
 } from "@/lib/api";
 
 type Phase = "idle" | "scanning" | "results" | "cleaning" | "done";
+export type Tab = "disk" | "memory";
 
 interface AppState {
+  tab: Tab;
+  setTab: (t: Tab) => void;
+
   disk: DiskStatus | null;
   mem: MemPressure | null;
   categories: CategoryResult[];
@@ -19,6 +23,7 @@ interface AppState {
   error: string | null;
 
   refreshStatus: () => Promise<void>;
+  refreshMemory: () => Promise<void>;
   scan: () => Promise<void>;
   toggleSelect: (id: string) => void;
   selectTier: (tier: 1 | 2 | 3) => void;
@@ -28,6 +33,9 @@ interface AppState {
 }
 
 export const useApp = create<AppState>((set, get) => ({
+  tab: "disk",
+  setTab: (tab) => set({ tab }),
+
   disk: null,
   mem: null,
   categories: [],
@@ -38,13 +46,19 @@ export const useApp = create<AppState>((set, get) => ({
 
   refreshStatus: async () => {
     try {
-      const [disk, mem] = await Promise.all([
-        api.diskStatus(),
-        api.memoryPressure(),
-      ]);
-      set({ disk, mem, error: null });
+      const disk = await api.diskStatus();
+      set({ disk, error: null });
     } catch (e) {
       set({ error: String(e) });
+    }
+  },
+
+  refreshMemory: async () => {
+    try {
+      const mem = await api.memoryPressure();
+      set({ mem });
+    } catch {
+      /* swallow — UI shows em-dash */
     }
   },
 
@@ -90,8 +104,8 @@ export const useApp = create<AppState>((set, get) => ({
   },
 
   cleanSafe: async () => {
-    const ids = get().categories
-      .filter((c) => c.tier === 1 && c.size_bytes > 0)
+    const ids = get()
+      .categories.filter((c) => c.tier === 1 && c.size_bytes > 0)
       .map((c) => c.id);
     if (ids.length === 0) return;
     set({ phase: "cleaning", error: null });

@@ -1,62 +1,73 @@
-import { Trash2, FolderOpen, AlertTriangle } from "lucide-react";
+import { FolderOpen, AlertCircle } from "lucide-react";
 import { useApp } from "@/store";
 import { api, CategoryResult, Tier } from "@/lib/api";
 import { formatBytes } from "@/lib/utils";
 
-const TIER_META: Record<Tier, { label: string; sub: string; accent: string }> =
-  {
-    1: {
-      label: "Safe to clean",
-      sub: "Pure caches that regenerate automatically.",
-      accent: "text-green",
-    },
-    2: {
-      label: "Confirm first",
-      sub: "Larger artifacts that rebuild on next use.",
-      accent: "text-accent-2",
-    },
-    3: {
-      label: "Your call",
-      sub: "Apps you might want to keep around.",
-      accent: "text-red",
-    },
-  };
+const TIER_META: Record<
+  Tier,
+  { label: string; sub: string; dot: string }
+> = {
+  1: {
+    label: "Safe to clean",
+    sub: "Pure caches that regenerate automatically.",
+    dot: "bg-green",
+  },
+  2: {
+    label: "Confirm first",
+    sub: "Rebuild on next use; verify the app is closed.",
+    dot: "bg-orange",
+  },
+  3: {
+    label: "Your call",
+    sub: "User-judgment cleanups.",
+    dot: "bg-red",
+  },
+};
 
 function Row({ c }: { c: CategoryResult }) {
   const selected = useApp((s) => s.selectedIds.has(c.id));
   const toggle = useApp((s) => s.toggleSelect);
   const blocked = !!c.running_app_block;
+  const empty = c.size_bytes === 0;
   return (
     <div
-      className={`flex items-center gap-3 border-t border-line px-3 py-2.5 hover:bg-surface ${selected ? "bg-surface" : ""}`}
+      onClick={() => !blocked && !empty && toggle(c.id)}
+      className={`row grid-cols-[18px_1fr_auto_20px_72px] gap-2.5 ${
+        !blocked && !empty
+          ? "cursor-default hover:bg-surface-2"
+          : "opacity-50"
+      } ${selected ? "bg-surface-2" : ""}`}
     >
       <input
         type="checkbox"
         checked={selected}
-        disabled={blocked || c.size_bytes === 0}
+        disabled={blocked || empty}
         onChange={() => toggle(c.id)}
-        className="size-4 accent-[var(--color-accent)]"
+        onClick={(e) => e.stopPropagation()}
+        className="size-3.5"
       />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm text-fg">{c.label}</div>
-        <div className="truncate font-mono text-[10px] text-muted">
-          {c.why}
-        </div>
+      <div className="min-w-0">
+        <div className="truncate text-[12.5px] text-fg">{c.label}</div>
+        <div className="truncate text-[11px] text-fg-3">{c.why}</div>
         {blocked && (
-          <div className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-red">
-            <AlertTriangle size={10} />
+          <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-orange">
+            <AlertCircle size={11} />
             {c.running_app_block} is open — quit it first
           </div>
         )}
       </div>
+      <div />
       <button
-        onClick={() => c.paths[0] && api.openInFinder(c.paths[0])}
-        className="text-muted hover:text-fg"
-        title="Open in Finder"
+        onClick={(e) => {
+          e.stopPropagation();
+          c.paths[0] && api.openInFinder(c.paths[0]);
+        }}
+        className="text-fg-3 hover:text-fg"
+        title="Reveal in Finder"
       >
-        <FolderOpen size={14} />
+        <FolderOpen size={13} />
       </button>
-      <div className="tabular w-20 text-right font-mono text-sm text-fg">
+      <div className="tabular text-right font-mono text-[12px] text-fg">
         {formatBytes(c.size_bytes)}
       </div>
     </div>
@@ -75,24 +86,25 @@ function Section({
   const meta = TIER_META[tier];
   if (categories.length === 0) return null;
   return (
-    <section className="mt-3 first:mt-0">
-      <header className="flex items-baseline justify-between px-3 pb-1">
-        <div>
-          <div
-            className={`font-mono text-[10px] tracking-[0.2em] uppercase ${meta.accent}`}
-          >
-            Tier {tier} · {meta.label}
+    <section className="mb-3 first:mt-1">
+      <header className="flex items-end justify-between px-4 pb-1.5">
+        <div className="flex items-center gap-2">
+          <span className={`block size-1.5 rounded-full ${meta.dot}`} />
+          <div>
+            <div className="text-[12px] font-medium text-fg">
+              {meta.label}
+            </div>
+            <div className="text-[11px] text-fg-3">{meta.sub}</div>
           </div>
-          <div className="text-[11px] text-muted">{meta.sub}</div>
         </div>
         <button
           onClick={() => selectTier(tier)}
-          className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted hover:text-fg"
+          className="text-[11px] font-medium text-blue hover:text-blue-2"
         >
-          select all · {formatBytes(total)}
+          Select all · {formatBytes(total)}
         </button>
       </header>
-      <div>
+      <div className="card mx-3">
         {categories.map((c) => (
           <Row key={c.id} c={c} />
         ))}
@@ -125,35 +137,33 @@ export function Results() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto px-2 pb-4 pt-2">
+      <div className="flex-1 overflow-y-auto pt-1 pb-3">
         <Section tier={1} categories={byTier(1)} />
         <Section tier={2} categories={byTier(2)} />
         <Section tier={3} categories={byTier(3)} />
       </div>
-      <footer className="flex items-center gap-2 border-t border-line bg-bg-2 px-3 py-3">
+      <footer className="flex items-center gap-2 border-t border-line bg-bg-2 px-3 py-2.5">
         {hasSelection ? (
           <>
             <button
               onClick={cleanSelected}
-              className="flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-bg"
+              className="flex flex-1 items-center justify-center rounded-md bg-blue px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-blue-2 active:opacity-80"
             >
-              <Trash2 size={14} />
               Clean selected · {formatBytes(selectedTotal)}
             </button>
             <button
               onClick={clear}
-              className="rounded-md border border-line px-3 py-2 text-sm text-fg-2 hover:bg-surface"
+              className="rounded-md px-2 py-1.5 text-[12px] text-fg-2 hover:bg-surface"
             >
-              clear
+              Clear
             </button>
           </>
         ) : (
           <button
             onClick={cleanSafe}
             disabled={safeTotal === 0}
-            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-bg disabled:opacity-40"
+            className="flex flex-1 items-center justify-center rounded-md bg-blue px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-blue-2 disabled:opacity-30"
           >
-            <Trash2 size={14} />
             Clean safe stuff · {formatBytes(safeTotal)}
           </button>
         )}

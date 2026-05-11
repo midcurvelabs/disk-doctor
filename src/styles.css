@@ -1,21 +1,33 @@
 @import "tailwindcss";
 
+/* macOS system palette — matches Activity Monitor / System Settings in dark mode.
+   Tokens use Apple's "Vibrant Dark" hex values. */
 @theme {
-  --color-bg: #0b0d10;
-  --color-bg-2: #14171c;
-  --color-surface: #1a1e25;
-  --color-line: #262b34;
-  --color-fg: #f3efe6;
-  --color-fg-2: #c9c4b7;
-  --color-muted: #7a7669;
-  --color-accent: #ff7a1a;
-  --color-accent-2: #ffd166;
-  --color-green: #6ed089;
-  --color-red: #ff5b6e;
-  --color-blue: #6cb1ff;
+  --color-bg: #1c1c1e; /* systemGroupedBackground (dark) */
+  --color-bg-2: #161618; /* deeper for window chrome */
+  --color-surface: #2c2c2e; /* systemBackground secondary */
+  --color-surface-2: #3a3a3c; /* systemBackground tertiary */
+  --color-line: rgba(255, 255, 255, 0.08); /* separator */
+  --color-line-strong: rgba(255, 255, 255, 0.15);
 
-  --font-display: "InterVariable", "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  --color-fg: #ffffff; /* label */
+  --color-fg-2: rgba(235, 235, 245, 0.6); /* secondaryLabel */
+  --color-fg-3: rgba(235, 235, 245, 0.3); /* tertiaryLabel */
+  --color-muted: rgba(235, 235, 245, 0.18);
+
+  --color-blue: #0a84ff;
+  --color-blue-2: #409cff;
+  --color-green: #32d74b;
+  --color-orange: #ff9f0a;
+  --color-red: #ff453a;
+  --color-purple: #bf5af2;
+  --color-yellow: #ffd60a;
+
+  --font-display: -apple-system, "SF Pro Text", system-ui, "Inter", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-card: 12px;
+  --radius-button: 8px;
 }
 
 html,
@@ -25,32 +37,77 @@ body,
   background: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-display);
+  font-size: 13px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   margin: 0;
   overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Tabular numbers everywhere stats live */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: default;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--color-blue);
+}
+
 .tabular {
   font-variant-numeric: tabular-nums slashed-zero;
 }
 
-/* Tiny scrollbar */
+/* macOS-style traffic-light area inset for window padding */
+.window-pad-top {
+  padding-top: 28px;
+}
+
+/* Scrollbar — thin and quiet, matches Finder */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-line);
-  border-radius: 4px;
+  background: var(--color-line-strong);
+  border-radius: 999px;
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-muted);
+  background: rgba(255, 255, 255, 0.3);
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Reusable bits */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.row {
+  display: grid;
+  align-items: center;
+  padding: 8px 14px;
+}
+.row + .row {
+  border-top: 1px solid var(--color-line);
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-3);
 }

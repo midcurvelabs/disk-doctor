@@ -8,10 +8,9 @@ mod scanner;
 
 use std::time::Duration;
 use tauri::{
-    image::Image,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager,
+    Emitter, Manager,
 };
 
 fn format_free_label(pct: f64) -> String {
@@ -26,11 +25,14 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::disk_status,
             commands::memory_pressure,
+            commands::top_processes,
             commands::scan_all,
             commands::scan_one,
             commands::clean,
             commands::history,
             commands::open_in_finder,
+            commands::open_activity_monitor,
+            commands::quit_process,
         ])
         .setup(|app| {
             // Build the tray menu.
@@ -41,8 +43,7 @@ pub fn run() {
             let menu = Menu::with_items(app, &[&show_item, &scan_item, &sep, &quit_item])?;
 
             // Tray icon — uses the default app icon for v1; custom icon is P1.
-            let icon_bytes = include_bytes!("../icons/icon.png");
-            let icon = Image::from_bytes(icon_bytes)?;
+            let icon = tauri::include_image!("icons/icon.png");
 
             let tray = TrayIconBuilder::with_id("main-tray")
                 .icon(icon)
