@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Disk Doctor — CleanMyMac for the vibe coding era</title>
+<meta name="description" content="A macOS menubar app that finds and cleans the caches generic Mac cleaners miss — Claude Code VMs, opencode snapshots, node_modules, Ollama models, Electron partitions. 2.7 MB. Free. MIT.">
+<meta name="theme-color" content="#0b0d10">
+<!-- Favicons (full coverage: SVG for modern browsers, .ico for legacy, PNGs for sizes) -->
+<link rel="icon" type="image/svg+xml" href="./logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
+<link rel="shortcut icon" href="./favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="manifest" href="./site.webmanifest">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Disk Doctor — CleanMyMac for the vibe coding era">
+<meta property="og:description" content="The macOS menubar app that knows what a Claude VM is. Free, open source, 2.7 MB.">
+<meta property="og:image" content="https://diskdoctor.midcurved.com/og-image.png">
+<meta property="og:url" content="https://diskdoctor.midcurved.com">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Disk Doctor — for the vibe coding era">
+<meta name="twitter:description" content="The macOS menubar app that knows what a Claude VM is. Free, open source.">
+<meta name="twitter:image" content="https://diskdoctor.midcurved.com/og-image.png">
+
+<style>
+  :root {
+    --bg: #0b0d10;
+    --bg-2: #14171c;
+    --surface: #1a1e25;
+    --surface-2: #232831;
+    --line: #262b34;
+    --line-strong: #313742;
+    --fg: #f3efe6;
+    --fg-2: #c9c4b7;
+    --fg-3: rgba(243,239,230,0.45);
+    --muted: #7a7669;
+    --accent: #ff7a1a;
+    --accent-2: #ffd166;
+    --green: #6ed089;
+    --red: #ff5b6e;
+    --blue: #6cb1ff;
+    --purple: #bf8eff;
+    --display: "InterVariable","Inter",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+    --mono: ui-monospace,"JetBrains Mono","SF Mono",Menlo,monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--display); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: rgba(11,13,16,0.72);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .inner {
+    max-width: 1240px; margin: 0 auto; padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; }
+  nav .brand img { width: 26px; height: 26px; border-radius: 6px; }
+  nav .links { display: flex; align-items: center; gap: 6px; }
+  nav a { color: var(--fg-2); text-decoration: none; padding: 7px 12px; border-radius: 7px; font-size: 14px; }
+  nav a:hover { color: var(--fg); background: var(--surface); }
+  nav .cta { background: var(--accent); color: var(--bg); font-weight: 600; padding: 8px 14px; }
+  nav .cta:hover { background: var(--accent-2); color: var(--bg); }
+
+  main > section { padding: 7vw 28px; max-width: 1240px; margin: 0 auto; }
+  section.full { max-width: none; padding-left: 0; padding-right: 0; }
+  section.full > .inner { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+  section.alt { background: var(--bg-2); }
+
+  /* Hero */
+  .hero { padding-top: 9vw; padding-bottom: 6vw; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 6vw; align-items: center; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .eyebrow::before { content: ""; width: 32px; height: 1px; background: var(--accent); display: inline-block; }
+  h1 {
+    font-size: clamp(48px, 7vw, 96px);
+    line-height: .96; letter-spacing: -.035em; font-weight: 700;
+    margin-top: 22px;
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lede {
+    font-size: clamp(18px, 1.6vw, 22px); line-height: 1.45;
+    color: var(--fg-2); margin-top: 22px; max-width: 56ch;
+  }
+  .cta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 30px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent); color: var(--bg);
+    padding: 13px 20px; border-radius: 10px;
+    font-weight: 600; font-size: 15px; text-decoration: none;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .btn:hover { background: var(--accent-2); transform: translateY(-1px); }
+  .btn.ghost { background: var(--surface); color: var(--fg); border: 1px solid var(--line-strong); }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .btn .size { font-family: var(--mono); font-size: 11px; opacity: .65; font-weight: 500; }
+  .meta-row {
+    display: flex; gap: 18px; flex-wrap: wrap; margin-top: 18px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .meta-row .dot::before { content: "·"; margin-right: 18px; color: var(--line-strong); }
+
+  .hero-shot {
+    position: relative; aspect-ratio: 5/4;
+    background-image: url('./screenshot-01.png');
+    background-size: cover; background-position: center;
+    border-radius: 14px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  /* Logo strip / values */
+  .values {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+    padding: 28px; background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  }
+  .values .v { padding: 10px 14px; text-align: center; }
+  .values .n { font-size: clamp(24px, 2.6vw, 36px); font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--fg); }
+  .values .l { font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
+
+  /* Section heads */
+  .section-head { margin-bottom: 38px; max-width: 64ch; }
+  h2 {
+    font-size: clamp(36px, 4.4vw, 64px);
+    line-height: 1; letter-spacing: -.025em; font-weight: 700;
+    margin-top: 12px;
+  }
+  h2 em { font-style: normal; color: var(--accent); }
+  h3 { font-size: 20px; letter-spacing: -.01em; font-weight: 600; margin-bottom: 10px; }
+  p.body { color: var(--fg-2); font-size: 16px; line-height: 1.6; }
+
+  /* Problem section */
+  .problem-grid {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-top: 24px;
+  }
+  .stat-cell {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 24px;
+  }
+  .stat-cell .n {
+    font-size: clamp(28px, 3.2vw, 44px); font-weight: 700; letter-spacing: -.02em;
+    line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .stat-cell .n .unit { font-size: .55em; color: var(--muted); margin-left: 6px; font-weight: 500; }
+  .stat-cell .l {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--muted); margin-top: 14px; line-height: 1.4;
+  }
+
+  /* The story (wrong-diagnoses) */
+  .wrong-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 22px;
+  }
+  .quote-wrong {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 28px;
+  }
+  .quote-wrong .q { font-size: clamp(22px, 2vw, 28px); font-weight: 600; line-height: 1.15; letter-spacing: -.015em; }
+  .quote-wrong .tag {
+    display: block; margin-top: 14px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--red);
+  }
+
+  /* Solution / features with screenshots */
+  .feature {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: center;
+    padding: 6vw 0;
+  }
+  .feature.reverse { grid-template-columns: 1fr 1fr; }
+  .feature.reverse .text { order: 2; }
+  .feature.reverse .visual { order: 1; }
+  .feature .visual img {
+    width: 100%; height: auto; border-radius: 14px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+  }
+  .feature h3.tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 14px;
+  }
+  .feature h2 { margin: 0; }
+  .feature p.body { margin-top: 18px; }
+  .bullets { margin-top: 20px; }
+  .bullets li {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 0; border-top: 1px solid var(--line); color: var(--fg-2); font-size: 15px;
+    list-style: none;
+  }
+  .bullets li:last-child { border-bottom: 1px solid var(--line); }
+  .bullets li::before {
+    content: ""; flex: none;
+    width: 18px; height: 18px; margin-top: 2px; border-radius: 5px;
+    background: rgba(255,122,26,0.12);
+    background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 0 1px rgba(255,122,26,0.3);
+  }
+
+  /* Catalog grid */
+  .catalog {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 24px;
+  }
+  .cat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; font-size: 14px; color: var(--fg-2);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .cat .tier {
+    flex: none; font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
+  }
+  .cat .t1 { background: rgba(110,208,137,0.14); color: var(--green); }
+  .cat .t2 { background: rgba(255,209,102,0.14); color: var(--accent-2); }
+
+  /* Why-Tauri code panel */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
+  pre.code {
+    background: #07090c; border: 1px solid var(--line); border-radius: 12px; padding: 24px;
+    font-family: var(--mono); font-size: 13px; line-height: 1.7; color: var(--fg-2); overflow: auto;
+  }
+  pre.code .c { color: var(--muted); }
+  pre.code .k { color: var(--blue); }
+  pre.code .s { color: var(--green); }
+  pre.code .a { color: var(--accent-2); }
+
+  /* Install */
+  .install-steps { display: grid; gap: 14px; max-width: 720px; margin-top: 24px; }
+  .step {
+    display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: start;
+    padding: 18px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .step .n {
+    font-size: 28px; font-weight: 700; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums;
+  }
+  .step .t { font-size: 16px; font-weight: 500; color: var(--fg); }
+  .step .t small { display: block; font-size: 13.5px; font-weight: 400; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .step code { font-family: var(--mono); font-size: 12.5px; background: var(--bg); color: var(--accent-2); padding: 2px 7px; border-radius: 4px; }
+  .install-cmd {
+    margin-top: 24px; padding: 20px 24px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+    font-family: var(--mono); font-size: 13.5px; color: var(--fg-2); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .install-cmd .label { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+  .install-cmd code { color: var(--fg); font-size: 13.5px; word-break: break-all; }
+  .copy-btn { background: var(--surface); color: var(--fg); padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line-strong); font-family: var(--display); font-size: 13px; font-weight: 500; cursor: pointer; }
+  .copy-btn:hover { background: var(--surface-2); }
+
+  /* FAQ */
+  .faq { display: grid; gap: 8px; max-width: 820px; }
+  details {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px;
+  }
+  details summary {
+    cursor: pointer; list-style: none; font-weight: 500; color: var(--fg); font-size: 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: "+"; color: var(--accent); font-size: 22px; line-height: 1; transition: transform .2s ease; }
+  details[open] summary::after { content: "−"; }
+  details p {
+    color: var(--fg-2); font-size: 15px; line-height: 1.55; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+  }
+  details code { font-family: var(--mono); font-size: 12.5px; background: var(--bg); color: var(--accent-2); padding: 2px 7px; border-radius: 4px; }
+
+  /* Final CTA */
+  .final {
+    text-align: center; padding: 10vw 28px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,122,26,0.16), transparent 55%),
+      radial-gradient(circle at 70% 70%, rgba(255,209,102,0.10), transparent 55%),
+      var(--bg-2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .final h2 { margin: 0 auto; }
+  .final p.lede { margin: 20px auto 0; }
+  .final .cta-row { justify-content: center; }
+
+  /* Footer */
+  footer { padding: 50px 28px 60px; max-width: 1240px; margin: 0 auto; color: var(--muted); font-size: 13px; }
+  footer .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer .row + .row { margin-top: 22px; }
+  footer a { color: var(--fg-2); text-decoration: none; }
+  footer a:hover { color: var(--fg); }
+  footer .brand-line { display: flex; align-items: center; gap: 10px; color: var(--fg); font-weight: 600; }
+  footer .brand-line img { width: 22px; height: 22px; border-radius: 5px; }
+  footer .micro { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+
+  /* Responsive */
+  @media (max-width: 980px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-shot { aspect-ratio: 5/4; margin-top: 18px; }
+    .values { grid-template-columns: repeat(2,1fr); }
+    .problem-grid { grid-template-columns: repeat(2,1fr); }
+    .wrong-grid { grid-template-columns: 1fr; }
+    .feature { grid-template-columns: 1fr; gap: 28px; padding: 28px 0; }
+    .feature.reverse .text { order: 0; }
+    .feature.reverse .visual { order: 1; }
+    .catalog { grid-template-columns: 1fr 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    nav a.hide-mobile { display: none; }
+    .values { grid-template-columns: 1fr 1fr; }
+    .problem-grid { grid-template-columns: 1fr 1fr; }
+    .catalog { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="inner">
+    <a href="/" class="brand"><img src="./logo.png" alt=""> Disk Doctor</a>
+    <div class="links">
+      <a href="#problem" class="hide-mobile">Why</a>
+      <a href="#features" class="hide-mobile">Features</a>
+      <a href="https://github.com/midcurvelabs/disk-doctor" class="hide-mobile">GitHub</a>
+      <a href="https://github.com/midcurvelabs/disk-doctor/releases/download/v0.1.0/Disk.Doctor_0.1.0_aarch64.dmg" class="cta">Download</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <span class="eyebrow">Ship Season 01 · Day 6</span>
+      <h1>The cache cleaner that knows what a <em>Claude VM</em> is.</h1>
+      <p class="lede">Generic Mac cleaners predate the agent era. They flag Adobe caches and ignore that you have a literal Linux disk image growing inside <code style="font-family:var(--mono);color:var(--accent-2);background:rgba(255,209,102,0.08);padding:2px 6px;border-radius:4px;font-size:.92em">Library/Application Support/Claude/vm_bundles</code>. Disk Doctor doesn't.</p>
+      <div class="cta-row">
+        <a href="https://github.com/midcurvelabs/disk-doctor/releases/download/v0.1.0/Disk.Doctor_0.1.0_aarch64.dmg" class="btn">
+          Download for macOS <span class="size">v0.1.0 · 2.7 MB</span>
+        </a>
+        <a href="https://github.com/midcurvelabs/disk-doctor" class="btn ghost">Star on GitHub</a>
+      </div>
+      <div class="meta-row">
+        <span>Apple Silicon</span>
+        <span class="dot">macOS 13+</span>
+        <span class="dot">MIT licensed</span>
+        <span class="dot">No telemetry</span>
+      </div>
+    </div>
+    <div class="hero-shot" aria-label="Disk Doctor app — Disk tab idle state"></div>
+  </div>
+</section>
+
+<!-- VALUES BAR -->
+<section class="full">
+  <div class="values">
+    <div class="v"><div class="n">2.7 <span style="font-size:.55em;color:var(--muted)">MB</span></div><div class="l">Download size</div></div>
+    <div class="v"><div class="n">~60 <span style="font-size:.55em;color:var(--muted)">MB</span></div><div class="l">Idle memory</div></div>
+    <div class="v"><div class="n">15</div><div class="l">Cache categories</div></div>
+    <div class="v"><div class="n">$0</div><div class="l">Forever</div></div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-head">
+    <span class="eyebrow">The problem</span>
+    <h2>Your Mac is slowly suffocating and you don't know why.</h2>
+    <p class="body" style="margin-top:18px;max-width:60ch">Vibe coding has a hidden footprint. Every project leaves a tail of regenerable cruft you can't see. The result is a disk that's mysteriously 80% full, Claude crashes mid-task, apps freeze, and you blame the wrong thing.</p>
+  </div>
+  <div class="problem-grid">
+    <div class="stat-cell"><div class="n">73<span class="unit">%</span></div><div class="l">disk full · the point where macOS swap starts thrashing</div></div>
+    <div class="stat-cell"><div class="n">7</div><div class="l">crash reports in 5 days of agent work</div></div>
+    <div class="stat-cell"><div class="n">90</div><div class="l">MCP servers loaded per Claude session · per session</div></div>
+    <div class="stat-cell"><div class="n">64<span class="unit">MB</span></div><div class="l">free RAM on a 16 GB machine</div></div>
+  </div>
+
+  <h3 style="margin-top:60px;margin-bottom:16px;font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)">Three wrong diagnoses</h3>
+  <div class="wrong-grid">
+    <div class="quote-wrong"><div class="q">"Claude is broken."<span class="tag">— Me, day 1</span></div></div>
+    <div class="quote-wrong"><div class="q">"The model got dumber overnight."<span class="tag">— Me, day 2</span></div></div>
+    <div class="quote-wrong"><div class="q">"I need a new laptop."<span class="tag">— Me, day 3 · the most wrong</span></div></div>
+  </div>
+  <p class="body" style="margin-top:32px;text-align:center;max-width:60ch;margin-left:auto;margin-right:auto">It wasn't the model. It wasn't the laptop. It was <strong style="color:var(--fg)">84 GB</strong> of regenerable agent-era cruft I had no idea was there.</p>
+</section>
+
+<!-- SOLUTION — DISK -->
+<section class="alt full" id="features">
+  <div class="inner">
+    <div class="section-head">
+      <span class="eyebrow">The solution</span>
+      <h2>Two tabs. <em>One job.</em> Find what generic cleaners miss.</h2>
+    </div>
+
+    <div class="feature">
+      <div class="text">
+        <h3 class="tag">01 — The Disk tab</h3>
+        <h2>Scan 15 caches. Clean the safe ones in one click.</h2>
+        <p class="body">Every cache category is hard-coded — no user globs, no foot-guns. Three tiers sorted automatically: Safe (regenerates instantly), Confirm (rebuilds on next launch), Your call (apps you might want around).</p>
+        <ul class="bullets">
+          <li>npm cache, <code style="font-family:var(--mono);color:var(--accent-2);background:rgba(255,209,102,0.08);padding:2px 6px;border-radius:4px;font-size:.92em">node_modules</code> across every project (worktrees included)</li>
+          <li>Claude Code agent VM disk image · Ollama local models</li>
+          <li>opencode + Codex session snapshots and logs</li>
+          <li>Descript / Notion / Slack / Discord / Stremio Electron partitions</li>
+          <li>Xcode DerivedData + iOS Simulators · browser caches · Trash</li>
+        </ul>
+      </div>
+      <div class="visual">
+        <img src="./screenshot-02.png" alt="Disk Doctor — scan results showing safe-to-clean tier">
+      </div>
+    </div>
+
+    <div class="catalog">
+      <div class="cat"><span class="tier t1">T1</span>npm package cache</div>
+      <div class="cat"><span class="tier t1">T1</span>node_modules across all projects</div>
+      <div class="cat"><span class="tier t1">T1</span>opencode session snapshots</div>
+      <div class="cat"><span class="tier t1">T1</span>Codex archived sessions + logs</div>
+      <div class="cat"><span class="tier t2">T2</span>Claude Code agent VM disk</div>
+      <div class="cat"><span class="tier t2">T2</span>Ollama local models</div>
+      <div class="cat"><span class="tier t1">T1</span>Xcode DerivedData + Archives</div>
+      <div class="cat"><span class="tier t2">T2</span>iOS Simulators</div>
+      <div class="cat"><span class="tier t2">T2</span>Descript electron partitions</div>
+      <div class="cat"><span class="tier t2">T2</span>Notion / Slack / Discord / Stremio</div>
+      <div class="cat"><span class="tier t1">T1</span>Browser caches (Chrome/Brave/Dia)</div>
+      <div class="cat"><span class="tier t1">T1</span>pip + Playwright + Homebrew</div>
+      <div class="cat"><span class="tier t1">T1</span>User logs</div>
+      <div class="cat"><span class="tier t1">T1</span>Trash</div>
+      <div class="cat" style="background:transparent;border:1px dashed var(--line);color:var(--muted);justify-content:center">+ propose one</div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION — MEMORY -->
+<section>
+  <div class="feature reverse">
+    <div class="text">
+      <h3 class="tag">02 — The Memory tab</h3>
+      <h2>"100% used" is not "stuck." Pressure is the real signal.</h2>
+      <p class="body">macOS uses every spare page for caching by design. A naïve "% used" gauge always shows near 100%. What actually predicts a crash is memory pressure — a kernel-level state. Disk Doctor surfaces it directly, the same way Activity Monitor does, plus what generic tools don't:</p>
+      <ul class="bullets">
+        <li>Top processes <strong style="color:var(--fg)">grouped by parent <code style="font-family:var(--mono);color:var(--accent-2);background:rgba(255,209,102,0.08);padding:2px 6px;border-radius:4px;font-size:.92em">.app</code></strong> — "Browser Helper × 4" attributes correctly to Dia or Claude</li>
+        <li>Each row has a <strong style="color:var(--fg)">hover info-dot</strong> explaining what it is and whether it's safe to quit, in plain English</li>
+        <li>System processes classified <code style="font-family:var(--mono);color:var(--accent-2);background:rgba(255,209,102,0.08);padding:2px 6px;border-radius:4px;font-size:.92em">DoNotKill</code> — the quit button is disabled, no foot-guns</li>
+        <li>One-click polite quit via SIGTERM (never SIGKILL) — apps save state</li>
+      </ul>
+    </div>
+    <div class="visual">
+      <img src="./screenshot-03.png" alt="Disk Doctor — Memory tab with pressure bar and top apps">
+    </div>
+  </div>
+</section>
+
+<!-- WHY TAURI -->
+<section class="alt full">
+  <div class="inner">
+    <div class="section-head">
+      <span class="eyebrow">The irony tax</span>
+      <h2>An app that cleans Electron caches, built in Electron, is a punchline.</h2>
+      <p class="body" style="margin-top:18px;max-width:60ch">Disk Doctor uses the macOS system WebView via Tauri 2. No Chromium bundled. The release binary is 2.7 MB. RAM at idle is around 60 MB. Every Electron app embeds its own Chromium — combined, Descript, Notion, Slack, Discord and Stremio held 11 GB of partition caches on my Mac. The cure has to be smaller than the disease.</p>
+    </div>
+    <div class="compare-grid">
+      <pre class="code"><span class="c"># release binary footprint</span>
+disk-doctor.dmg      <span class="s">2.7 MB</span>
+electron-baseline    <span class="s">~120 MB</span>
+
+<span class="c"># at-idle RSS (typical)</span>
+disk-doctor          <span class="s">~60 MB</span>
+electron-baseline    <span class="s">~300 MB</span>
+
+<span class="c"># scan time, 15 categories, parallel</span>
+disk-doctor          <span class="s">~1.4 s</span>
+node script eq.      <span class="s">~6 s</span></pre>
+      <div>
+        <h3 style="font-size:22px;margin-bottom:14px">Built on:</h3>
+        <ul class="bullets">
+          <li><strong style="color:var(--fg)">Tauri 2</strong> — system WebView, no bundled Chromium</li>
+          <li><strong style="color:var(--fg)">Rust</strong> — parallel walks via rayon, sysinfo for memory</li>
+          <li><strong style="color:var(--fg)">React 18 + Tailwind v4</strong> — macOS Settings-style UI</li>
+          <li><strong style="color:var(--fg)">Universal binary</strong> — Apple Silicon (Intel coming v0.2)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="section-head">
+    <span class="eyebrow">Install</span>
+    <h2>Three steps. <em>Sixty seconds.</em></h2>
+    <p class="body" style="margin-top:18px;max-width:60ch">No signup. No telemetry. No payment. Open source under MIT. If the cleanup helps, drop a star on the repo.</p>
+  </div>
+
+  <div class="install-steps">
+    <div class="step">
+      <div class="n">1</div>
+      <div class="t">Download the .dmg
+        <small>2.7 MB · Apple Silicon · macOS 13 or later.</small>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">2</div>
+      <div class="t">Drag Disk Doctor into your Applications folder
+        <small>From the mounted disk image, like any Mac app.</small>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">3</div>
+      <div class="t">First launch: right-click → Open → Open Anyway
+        <small>One-time macOS Gatekeeper bypass because this build isn't notarized yet. Apple Developer ID + notarization land in v0.2 (no more warning). Or skip the warning entirely with the command below.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="install-cmd">
+    <div>
+      <span class="label">Skip the Gatekeeper warning</span>
+      <code id="cmd">xattr -dr com.apple.quarantine /Applications/Disk\ Doctor.app</code>
+    </div>
+    <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+  </div>
+
+  <div class="cta-row" style="margin-top:36px">
+    <a href="https://github.com/midcurvelabs/disk-doctor/releases/download/v0.1.0/Disk.Doctor_0.1.0_aarch64.dmg" class="btn">
+      Download v0.1.0 <span class="size">2.7 MB</span>
+    </a>
+    <a href="https://github.com/midcurvelabs/disk-doctor" class="btn ghost">View on GitHub</a>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="alt full" id="faq">
+  <div class="inner">
+    <div class="section-head">
+      <span class="eyebrow">FAQ</span>
+      <h2>What you're probably about to ask.</h2>
+    </div>
+    <div class="faq">
+      <details open>
+        <summary>Is it safe? Can it delete the wrong thing?</summary>
+        <p>Every Tier 1 path is hard-coded to a known cache directory — no user-supplied globs, ever. Tier 2 and Tier 3 deletions route through the macOS Trash via the <code>trash</code> Rust crate, not silent <code>rm -rf</code>. And the app refuses to clean a category if its owning app is running — quit Descript before its partitions get touched, for example.</p>
+      </details>
+      <details>
+        <summary>What's the "Apple cannot verify this app" warning?</summary>
+        <p>v0.1.0 is ad-hoc signed, not notarized through Apple's developer program. The app is safe — you can read every line of source on GitHub — but macOS Gatekeeper requires notarization to launch silently. Right-click → Open → Open Anyway the first time, or run the <code>xattr</code> command above. Proper notarization arrives in v0.2.</p>
+      </details>
+      <details>
+        <summary>Why is there no Intel build yet?</summary>
+        <p>v0.1.0 ships Apple Silicon only because that's where ~95% of active Mac dev users live in 2026. Intel build lands in v0.2 via the GitHub Actions release workflow.</p>
+      </details>
+      <details>
+        <summary>Does it phone home? Telemetry? Analytics?</summary>
+        <p>No. Zero network calls in v0.1. No analytics SDK. No crash reporter. No update check. The app has no notion of "online." History is a single JSON file at <code>~/Library/Application Support/disk-doctor/history.json</code> — yours alone.</p>
+      </details>
+      <details>
+        <summary>What about CleanMyMac / OnyX / DaisyDisk?</summary>
+        <p>They're good at what they do, but they predate the agent era. They flag Adobe caches and ignore your Claude Code VM, your opencode snapshots, your 28 <code>node_modules</code> across worktrees. Disk Doctor is built specifically for the cruft that builds up when you ship with AI tools. Use both if you want.</p>
+      </details>
+      <details>
+        <summary>Will it work for plain (non-agent) dev work?</summary>
+        <p>Yes. npm cache, <code>node_modules</code>, Xcode DerivedData, pip, Playwright, Homebrew, browser caches, and logs are all useful even without any AI tooling installed. The agent-specific categories simply read as empty in that case.</p>
+      </details>
+      <details>
+        <summary>Can I add a new cache category?</summary>
+        <p>Yes — open a pull request. The catalog is a single Rust file: <code>src-tauri/src/catalog.rs</code>. Adding a category is one struct literal. The README has the contributor walk-through.</p>
+      </details>
+      <details>
+        <summary>What's coming next?</summary>
+        <p>v0.2: Apple notarization, Intel build, customizable scan roots, history sparkline. Post v0.2: opt-in Pro tier with auto-clean schedules, custom rule patterns, and multi-machine sync. Core stays free and MIT forever.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="full final">
+  <span class="eyebrow">Take it home</span>
+  <h2 style="margin-top:14px">Your Mac, lighter.</h2>
+  <p class="lede">Free your disk. Free your RAM. Free your weekend.</p>
+  <div class="cta-row">
+    <a href="https://github.com/midcurvelabs/disk-doctor/releases/download/v0.1.0/Disk.Doctor_0.1.0_aarch64.dmg" class="btn">
+      Download for macOS <span class="size">2.7 MB</span>
+    </a>
+    <a href="https://github.com/midcurvelabs/disk-doctor" class="btn ghost">View source</a>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="row">
+    <div class="brand-line"><img src="./logo.png" alt=""> Disk Doctor</div>
+    <div class="micro">Ship Season 01 · Day 6 · 2026-05-11</div>
+  </div>
+  <div class="row" style="margin-top:22px;align-items:flex-start">
+    <div>
+      Built with Tauri 2 + Rust + React.<br>
+      MIT licensed. Open source. No telemetry. No paywall.<br>
+      A <a href="https://midcurved.com">midcurvelabs</a> build by <a href="https://x.com/rikventure">@rikventure</a>.
+    </div>
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+      <a href="https://github.com/midcurvelabs/disk-doctor">GitHub</a>
+      <a href="https://github.com/midcurvelabs/disk-doctor/releases">Releases</a>
+      <a href="https://github.com/midcurvelabs/disk-doctor/issues">Issues</a>
+      <a href="https://github.com/midcurvelabs/disk-doctor/blob/main/LICENSE">License</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Copy command button
+  const btn = document.getElementById('copyBtn');
+  const cmd = document.getElementById('cmd');
+  if (btn && cmd) {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(cmd.textContent.trim());
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = original; }, 1400);
+      } catch {
+        btn.textContent = 'Press ⌘C';
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
