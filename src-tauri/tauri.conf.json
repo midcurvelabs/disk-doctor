@@ -1,0 +1,52 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Disk Doctor",
+  "version": "0.1.0",
+  "identifier": "com.midcurved.diskdoctor",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Disk Doctor",
+        "width": 480,
+        "height": 640,
+        "minWidth": 420,
+        "minHeight": 540,
+        "resizable": true,
+        "visible": false,
+        "decorations": true,
+        "transparent": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "fullscreen": false,
+        "skipTaskbar": true
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg", "app"],
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.icns"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "Audit and clean agent-era developer cruft.",
+    "longDescription": "Disk Doctor is a macOS menubar app that finds and removes caches the generic Mac cleaners miss: Claude Code VMs, opencode snapshots, node_modules across many projects, Ollama models, Electron app partitions, Xcode caches, and more.",
+    "macOS": {
+      "minimumSystemVersion": "13.0",
+      "exceptionDomain": "",
+      "frameworks": []
+    }
+  }
+}

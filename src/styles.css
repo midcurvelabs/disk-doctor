@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0d10;
+  --color-bg-2: #14171c;
+  --color-surface: #1a1e25;
+  --color-line: #262b34;
+  --color-fg: #f3efe6;
+  --color-fg-2: #c9c4b7;
+  --color-muted: #7a7669;
+  --color-accent: #ff7a1a;
+  --color-accent-2: #ffd166;
+  --color-green: #6ed089;
+  --color-red: #ff5b6e;
+  --color-blue: #6cb1ff;
+
+  --font-display: "InterVariable", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Tabular numbers everywhere stats live */
+.tabular {
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+/* Tiny scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
