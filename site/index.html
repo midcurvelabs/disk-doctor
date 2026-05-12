@@ -512,15 +512,15 @@ node script eq.      <span class="s">~6 s</span></pre>
     </div>
     <div class="step">
       <div class="n">3</div>
-      <div class="t">First launch: right-click → Open → Open Anyway
-        <small>One-time macOS Gatekeeper bypass because this build isn't notarized yet. Apple Developer ID + notarization land in v0.2 (no more warning). Or skip the warning entirely with the command below.</small>
+      <div class="t">Clear the macOS quarantine flag, then open
+        <small>v0.1 isn't notarized by Apple yet, so macOS will refuse the first launch with a "Disk Doctor is damaged" dialog. Click Cancel (not Move to Bin), paste the command below into Terminal, hit Enter, then double-click Disk Doctor. After this one-time step it launches normally forever. Already moved it to the Bin? Drag it back into Applications first, then run the command. Apple Developer ID + notarization land in v0.2 and this step goes away.</small>
       </div>
     </div>
   </div>
 
   <div class="install-cmd">
     <div>
-      <span class="label">Skip the Gatekeeper warning</span>
+      <span class="label">Required · paste into Terminal</span>
       <code id="cmd">xattr -dr com.apple.quarantine /Applications/Disk\ Doctor.app</code>
     </div>
     <button class="copy-btn" id="copyBtn" type="button">Copy</button>
@@ -542,13 +542,17 @@ node script eq.      <span class="s">~6 s</span></pre>
       <h2>What you're probably about to ask.</h2>
     </div>
     <div class="faq">
-      <details open>
+      <details>
         <summary>Is it safe? Can it delete the wrong thing?</summary>
         <p>Every Tier 1 path is hard-coded to a known cache directory — no user-supplied globs, ever. Tier 2 and Tier 3 deletions route through the macOS Trash via the <code>trash</code> Rust crate, not silent <code>rm -rf</code>. And the app refuses to clean a category if its owning app is running — quit Descript before its partitions get touched, for example.</p>
       </details>
+      <details open>
+        <summary>It says "Disk Doctor is damaged and can't be opened." Did I download a corrupt file?</summary>
+        <p>No — the download is fine. macOS Sonoma and Sequoia show that exact "is damaged" wording for any app that isn't notarized by Apple <em>and</em> carries the browser quarantine flag. It's a Gatekeeper message, not a file-integrity message. Click <strong>Cancel</strong> (do not click Move to Bin), then run the one-line Terminal command in <a href="#install">step 3 of the install</a> to clear the quarantine flag. The app will launch normally afterwards. If you already clicked Move to Bin, drag Disk Doctor back into Applications from the Trash first, then run the command.</p>
+      </details>
       <details>
-        <summary>What's the "Apple cannot verify this app" warning?</summary>
-        <p>v0.1.0 is ad-hoc signed, not notarized through Apple's developer program. The app is safe — you can read every line of source on GitHub — but macOS Gatekeeper requires notarization to launch silently. Right-click → Open → Open Anyway the first time, or run the <code>xattr</code> command above. Proper notarization arrives in v0.2.</p>
+        <summary>Why does macOS warn at all? Is the app safe?</summary>
+        <p>v0.1.0 is ad-hoc signed, not notarized through Apple's paid developer program. macOS therefore can't verify the publisher and refuses the first launch. The app itself is safe — every line of source is on GitHub and the binary is reproducible from that source. The <code>xattr -dr com.apple.quarantine</code> command in step 3 simply tells macOS "I trust this download" — exactly what right-click → Open used to do on older macOS versions. v0.2 will ship with proper Apple Developer ID + notarization and this whole step disappears.</p>
       </details>
       <details>
         <summary>Why is there no Intel build yet?</summary>
