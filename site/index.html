@@ -253,6 +253,31 @@
   .copy-btn { background: var(--surface); color: var(--fg); padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line-strong); font-family: var(--display); font-size: 13px; font-weight: 500; cursor: pointer; }
   .copy-btn:hover { background: var(--surface-2); }
 
+  /* Install — Recommended (brew) block */
+  .install-recommended {
+    margin-top: 24px; padding: 26px 28px;
+    background: linear-gradient(180deg, rgba(255,122,26,0.08), rgba(255,122,26,0.02));
+    border: 1px solid rgba(255,122,26,0.35);
+    border-radius: 14px;
+    max-width: 720px;
+  }
+  .install-recommended .pill {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    background: var(--accent); color: var(--bg);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; font-weight: 600;
+  }
+  .install-recommended h3 { font-size: 22px; line-height: 1.2; letter-spacing: -.01em; margin-top: 12px; color: var(--fg); }
+  .install-recommended p { color: var(--fg-2); font-size: 14.5px; line-height: 1.55; margin-top: 8px; max-width: 56ch; }
+  .install-recommended .install-cmd { margin-top: 18px; background: var(--bg); }
+  .manual-divider {
+    display: flex; align-items: center; gap: 16px;
+    max-width: 720px; margin: 30px 0 18px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted);
+  }
+  .manual-divider::before, .manual-divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--line);
+  }
+
   /* FAQ */
   .faq { display: grid; gap: 8px; max-width: 820px; }
   details {
@@ -326,7 +351,7 @@
       <a href="#problem" class="hide-mobile">Why</a>
       <a href="#features" class="hide-mobile">Features</a>
       <a href="https://github.com/midcurvelabs/disk-doctor" class="hide-mobile">GitHub</a>
-      <a href="https://github.com/midcurvelabs/disk-doctor/releases/download/v0.1.0/Disk.Doctor_0.1.0_aarch64.dmg" class="cta">Download</a>
+      <a href="#install" class="cta">Install</a>
     </div>
   </div>
 </nav>
@@ -493,9 +518,25 @@ node script eq.      <span class="s">~6 s</span></pre>
 <section id="install">
   <div class="section-head">
     <span class="eyebrow">Install</span>
-    <h2>Three steps. <em>Sixty seconds.</em></h2>
-    <p class="body" style="margin-top:18px;max-width:60ch">No signup. No telemetry. No payment. Open source under MIT. If the cleanup helps, drop a star on the repo.</p>
+    <h2>One command. <em>Sixty seconds.</em></h2>
+    <p class="body" style="margin-top:18px;max-width:60ch">Two ways in — Homebrew (recommended, handles the Gatekeeper step for you) or a manual DMG drop. No signup. No telemetry. No payment. Open source under MIT.</p>
   </div>
+
+  <!-- Recommended: Homebrew -->
+  <div class="install-recommended">
+    <span class="pill">Recommended · one command</span>
+    <h3>Install via Homebrew</h3>
+    <p>Our public Homebrew tap clears the macOS Gatekeeper quarantine automatically on install, so you skip the "is damaged" dialog entirely. Source for the tap lives at <a href="https://github.com/midcurvelabs/homebrew-tap" style="color:var(--accent)">midcurvelabs/homebrew-tap</a>.</p>
+    <div class="install-cmd">
+      <div>
+        <span class="label">Paste into Terminal</span>
+        <code id="cmd-brew">brew install --cask midcurvelabs/tap/disk-doctor</code>
+      </div>
+      <button class="copy-btn" data-copy-target="cmd-brew" type="button">Copy</button>
+    </div>
+  </div>
+
+  <div class="manual-divider"><span>Or install manually</span></div>
 
   <div class="install-steps">
     <div class="step">
@@ -521,9 +562,9 @@ node script eq.      <span class="s">~6 s</span></pre>
   <div class="install-cmd">
     <div>
       <span class="label">Required · paste into Terminal</span>
-      <code id="cmd">xattr -dr com.apple.quarantine /Applications/Disk\ Doctor.app</code>
+      <code id="cmd-xattr">xattr -dr com.apple.quarantine /Applications/Disk\ Doctor.app</code>
     </div>
-    <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+    <button class="copy-btn" data-copy-target="cmd-xattr" type="button">Copy</button>
   </div>
 
   <div class="cta-row" style="margin-top:36px">
@@ -548,11 +589,19 @@ node script eq.      <span class="s">~6 s</span></pre>
       </details>
       <details open>
         <summary>It says "Disk Doctor is damaged and can't be opened." Did I download a corrupt file?</summary>
-        <p>No — the download is fine. macOS Sonoma and Sequoia show that exact "is damaged" wording for any app that isn't notarized by Apple <em>and</em> carries the browser quarantine flag. It's a Gatekeeper message, not a file-integrity message. Click <strong>Cancel</strong> (do not click Move to Bin), then run the one-line Terminal command in <a href="#install">step 3 of the install</a> to clear the quarantine flag. The app will launch normally afterwards. If you already clicked Move to Bin, drag Disk Doctor back into Applications from the Trash first, then run the command.</p>
+        <p>No — the download is fine. macOS Sonoma and Sequoia show that exact "is damaged" wording for any app that isn't notarized by Apple <em>and</em> carries the browser quarantine flag. It's a Gatekeeper message, not a file-integrity message. Three ways past it, easiest first:</p>
+        <p><strong>1. Use Homebrew</strong> — <code>brew install --cask midcurvelabs/tap/disk-doctor</code> handles the quarantine step for you on install. Zero Terminal commands afterwards.<br>
+        <strong>2. Run one command</strong> — if you already downloaded the DMG and dragged the app to Applications, paste <code>xattr -dr com.apple.quarantine /Applications/Disk\ Doctor.app</code> into Terminal and hit Enter. Then double-click the app.<br>
+        <strong>3. System Settings (no Terminal)</strong> — open <strong>System Settings → Privacy &amp; Security</strong>, scroll near the bottom, look for "Disk Doctor was blocked…" and click <strong>Open Anyway</strong>. Works on macOS 13–14; some Sequoia (15) installs don't show this button for the "damaged" case, in which case use option 1 or 2.</p>
+        <p>If you already clicked "Move to Bin," drag Disk Doctor back into Applications from the Trash first.</p>
+      </details>
+      <details>
+        <summary>What does the Homebrew install actually do? Is it safe?</summary>
+        <p>The tap (<a href="https://github.com/midcurvelabs/homebrew-tap">midcurvelabs/homebrew-tap</a>) is a tiny public repo containing one Ruby cask formula. <code>brew install --cask midcurvelabs/tap/disk-doctor</code> downloads the same DMG from this site's <a href="https://github.com/midcurvelabs/disk-doctor/releases">GitHub releases</a>, verifies the SHA-256, copies <code>Disk Doctor.app</code> into <code>/Applications</code>, then runs <code>xattr -dr com.apple.quarantine</code> on it as a postflight step. Same binary as the manual download — just with the Gatekeeper detour automated. <code>brew uninstall --cask</code> cleanly reverses everything, including app support files.</p>
       </details>
       <details>
         <summary>Why does macOS warn at all? Is the app safe?</summary>
-        <p>v0.1.0 is ad-hoc signed, not notarized through Apple's paid developer program. macOS therefore can't verify the publisher and refuses the first launch. The app itself is safe — every line of source is on GitHub and the binary is reproducible from that source. The <code>xattr -dr com.apple.quarantine</code> command in step 3 simply tells macOS "I trust this download" — exactly what right-click → Open used to do on older macOS versions. v0.2 will ship with proper Apple Developer ID + notarization and this whole step disappears.</p>
+        <p>v0.1.0 is ad-hoc signed, not notarized through Apple's paid developer program. macOS therefore can't verify the publisher and refuses the first launch. The app itself is safe — every line of source is on GitHub and the binary is reproducible from that source. Clearing the quarantine flag simply tells macOS "I trust this download" — exactly what right-click → Open used to do on older macOS versions. v0.2 will ship with proper Apple Developer ID + notarization and this whole step disappears.</p>
       </details>
       <details>
         <summary>Why is there no Intel build yet?</summary>
@@ -619,21 +668,21 @@ node script eq.      <span class="s">~6 s</span></pre>
 </footer>
 
 <script>
-  // Copy command button
-  const btn = document.getElementById('copyBtn');
-  const cmd = document.getElementById('cmd');
-  if (btn && cmd) {
+  // Copy command buttons (any [data-copy-target="<id>"])
+  document.querySelectorAll('.copy-btn[data-copy-target]').forEach((btn) => {
+    const target = document.getElementById(btn.dataset.copyTarget);
+    if (!target) return;
     btn.addEventListener('click', async () => {
+      const original = btn.textContent;
       try {
-        await navigator.clipboard.writeText(cmd.textContent.trim());
-        const original = btn.textContent;
+        await navigator.clipboard.writeText(target.textContent.trim());
         btn.textContent = 'Copied';
-        setTimeout(() => { btn.textContent = original; }, 1400);
       } catch {
         btn.textContent = 'Press ⌘C';
       }
+      setTimeout(() => { btn.textContent = original; }, 1400);
     });
-  }
+  });
 </script>
 
 </body>
