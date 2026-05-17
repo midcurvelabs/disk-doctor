@@ -20,7 +20,7 @@ Ship Season 01, Day 6. Tauri 2 + Rust + React menubar app for macOS that audits 
 - Telemetry, auth, paywall, plugin ecosystem — all post-launch
 
 ## Source of truth
-The 15-entry cache catalog in §7 of `prd.md` IS the product. Adding a category = one entry in `src-tauri/src/catalog.rs`. Do not invent new categories without confirming with Rik.
+The cache catalog in `src-tauri/src/catalog.rs` IS the product — 42 categories as of v0.1 (expanded from the original 15 using path knowledge from the MIT-licensed Mole project). Adding a category = one struct literal. Keep entries grouped and tiered; never invent unsafe paths.
 
 ## Safety contract
 1. Tier 1 paths are hard-coded to known cache dirs. No user-input globs in Tier 1.

@@ -387,7 +387,7 @@
   <div class="values">
     <div class="v"><div class="n">2.7 <span style="font-size:.55em;color:var(--muted)">MB</span></div><div class="l">Download size</div></div>
     <div class="v"><div class="n">~60 <span style="font-size:.55em;color:var(--muted)">MB</span></div><div class="l">Idle memory</div></div>
-    <div class="v"><div class="n">15</div><div class="l">Cache categories</div></div>
+    <div class="v"><div class="n">40+</div><div class="l">Cache categories</div></div>
     <div class="v"><div class="n">$0</div><div class="l">Forever</div></div>
   </div>
 </section>
@@ -426,7 +426,7 @@
     <div class="feature">
       <div class="text">
         <h3 class="tag">01 — The Disk tab</h3>
-        <h2>Scan 15 caches. Clean the safe ones in one click.</h2>
+        <h2>Scan 40+ caches. Clean the safe ones in one click.</h2>
         <p class="body">Every cache category is hard-coded — no user globs, no foot-guns. Three tiers sorted automatically: Safe (regenerates instantly), Confirm (rebuilds on next launch), Your call (apps you might want around).</p>
         <ul class="bullets">
           <li>npm cache, <code style="font-family:var(--mono);color:var(--accent-2);background:rgba(255,209,102,0.08);padding:2px 6px;border-radius:4px;font-size:.92em">node_modules</code> across every project (worktrees included)</li>
@@ -442,21 +442,29 @@
     </div>
 
     <div class="catalog">
-      <div class="cat"><span class="tier t1">T1</span>npm package cache</div>
+      <div class="cat"><span class="tier t1">T1</span>npm · pnpm · Yarn · Bun caches</div>
       <div class="cat"><span class="tier t1">T1</span>node_modules across all projects</div>
+      <div class="cat"><span class="tier t2">T2</span>Build artifacts · .next / dist / target</div>
       <div class="cat"><span class="tier t1">T1</span>opencode session snapshots</div>
       <div class="cat"><span class="tier t1">T1</span>Codex archived sessions + logs</div>
       <div class="cat"><span class="tier t2">T2</span>Claude Code agent VM disk</div>
       <div class="cat"><span class="tier t2">T2</span>Ollama local models</div>
-      <div class="cat"><span class="tier t1">T1</span>Xcode DerivedData + Archives</div>
+      <div class="cat"><span class="tier t2">T2</span>HuggingFace / PyTorch / W&B caches</div>
+      <div class="cat"><span class="tier t1">T1</span>pip · uv · Poetry · Conda caches</div>
+      <div class="cat"><span class="tier t1">T1</span>Cargo · Go · Gradle · Maven caches</div>
+      <div class="cat"><span class="tier t1">T1</span>Vite / webpack / Turbo / ESLint caches</div>
+      <div class="cat"><span class="tier t1">T1</span>Xcode DerivedData + device support</div>
       <div class="cat"><span class="tier t2">T2</span>iOS Simulators</div>
       <div class="cat"><span class="tier t2">T2</span>Descript electron partitions</div>
       <div class="cat"><span class="tier t2">T2</span>Notion / Slack / Discord / Stremio</div>
-      <div class="cat"><span class="tier t1">T1</span>Browser caches (Chrome/Brave/Dia)</div>
-      <div class="cat"><span class="tier t1">T1</span>pip + Playwright + Homebrew</div>
-      <div class="cat"><span class="tier t1">T1</span>User logs</div>
-      <div class="cat"><span class="tier t1">T1</span>Trash</div>
-      <div class="cat" style="background:transparent;border:1px dashed var(--line);color:var(--muted);justify-content:center">+ propose one</div>
+      <div class="cat"><span class="tier t2">T2</span>VS Code / Cursor / Zed / JetBrains</div>
+      <div class="cat"><span class="tier t2">T2</span>Adobe / Figma / Sketch / DaVinci</div>
+      <div class="cat"><span class="tier t1">T1</span>Browser caches · 9 browsers</div>
+      <div class="cat"><span class="tier t2">T2</span>Docker buildx · Terraform · Bazel</div>
+      <div class="cat"><span class="tier t1">T1</span>Playwright / Puppeteer binaries</div>
+      <div class="cat"><span class="tier t1">T1</span>Homebrew · pip · QuickLook thumbnails</div>
+      <div class="cat"><span class="tier t1">T1</span>Logs · crash reports · Trash</div>
+      <div class="cat" style="background:transparent;border:1px dashed var(--line);color:var(--muted);justify-content:center">+ 20 more · propose one</div>
     </div>
   </div>
 </section>
@@ -498,7 +506,7 @@ electron-baseline    <span class="s">~120 MB</span>
 disk-doctor          <span class="s">~60 MB</span>
 electron-baseline    <span class="s">~300 MB</span>
 
-<span class="c"># scan time, 15 categories, parallel</span>
+<span class="c"># scan time, 40+ categories, parallel</span>
 disk-doctor          <span class="s">~1.4 s</span>
 node script eq.      <span class="s">~6 s</span></pre>
       <div>

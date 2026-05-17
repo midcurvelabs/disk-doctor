@@ -8,22 +8,22 @@ Built in a day as Ship Season 01, Day 6. See the field-notes presentation: [when
 
 ## What it knows about
 
-| Category | Tier | Notes |
-|---|---|---|
-| npm cache | 1 | `~/.npm/_cacache`, `~/.npm/_npx` |
-| `node_modules` (all projects) | 1 | regenerates via `npm install` |
-| opencode session snapshots | 1 | `~/.local/share/opencode/snapshot` |
-| Codex archived sessions + logs DB | 1 | |
-| Claude Code agent VM disk image | 2 | rebuilds on next agent run |
-| Ollama models | 2 | lists them first, then removes |
-| Xcode DerivedData + Archives | 1 | |
-| iOS Simulators | 2 | |
-| Descript electron partitions | 2 | refuses if Descript is open |
-| Notion / Slack / Discord / Stremio caches | 2 | |
-| Browser caches (Chrome / Brave / Dia) | 1 | refuses if browser is open |
-| pip cache, Playwright binaries, Homebrew | 1 | |
-| User logs | 1 | |
-| Trash | 1 | |
+**40+ cache categories**, grouped into three cleanup tiers. Highlights:
+
+| Group | Examples |
+|---|---|
+| **Package managers** | npm, pnpm store, Yarn, Bun, pip, uv, Poetry, Conda, Cargo, Go, Gradle, Maven, Composer, NuGet, sbt |
+| **AI / agent tools** | Claude Code agent VM, opencode snapshots, Codex sessions, Ollama models, Hugging Face / PyTorch / TensorFlow / W&B model caches, Copilot |
+| **Build tooling** | Vite, webpack, Turborepo, Parcel, ESLint, Prettier, tsc, `node_modules` + build artifacts (`.next`, `dist`, `target`, `.venv`) across every project |
+| **Xcode & Apple** | DerivedData, Archives, device support, iOS Simulators, QuickLook thumbnails |
+| **Browsers** | Chrome, Brave, Dia, Edge, Firefox, Safari, Arc, Chromium, Comet caches |
+| **Desktop apps** | Descript, Notion, Slack, Discord, Stremio, VS Code, Cursor, Zed, JetBrains, Adobe, Figma, Sketch, DaVinci, Postman, Insomnia, TablePlus |
+| **DevOps & containers** | Docker buildx, Terraform, Bazel, SonarLint, Playwright / Puppeteer browser binaries, Homebrew downloads |
+| **System** | user logs, crash/diagnostic reports, incomplete downloads, saved application state, Trash |
+
+The full catalog lives in [`src-tauri/src/catalog.rs`](src-tauri/src/catalog.rs) — one struct literal per category. Adding a new one is a one-line PR.
+
+Catalog path knowledge informed by the [Mole](https://github.com/tw93/Mole) project (MIT).
 
 ## Install
 
