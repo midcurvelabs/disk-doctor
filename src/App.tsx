@@ -3,6 +3,7 @@ import { useApp } from "@/store";
 import { Toolbar } from "@/components/Toolbar";
 import { DiskView } from "@/components/DiskView";
 import { MemoryView } from "@/components/MemoryView";
+import { PipelineView } from "@/components/PipelineView";
 
 export default function App() {
   const refreshStatus = useApp((s) => s.refreshStatus);
@@ -24,7 +25,7 @@ export default function App() {
     <div className="flex h-screen w-screen flex-col bg-bg text-fg">
       <Toolbar />
       <main className="flex-1 overflow-hidden">
-        {tab === "disk" ? <DiskView /> : <MemoryView />}
+        {tab === "disk" ? <DiskView /> : tab === "pipeline" ? <PipelineView /> : <MemoryView />}
       </main>
     </div>
   );

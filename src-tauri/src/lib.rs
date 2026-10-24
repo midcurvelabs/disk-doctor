@@ -4,6 +4,7 @@ mod commands;
 mod disk;
 mod history;
 mod memory;
+pub mod pipeline;
 mod scanner;
 
 use std::time::Duration;
@@ -13,8 +14,10 @@ use tauri::{
     Emitter, Manager,
 };
 
-fn format_free_label(pct: f64) -> String {
-    format!("{:>3.0}%", pct.clamp(0.0, 100.0))
+fn format_free_label(free_bytes: u64, threshold_gb: u64) -> String {
+    let gb = free_bytes as f64 / 1_073_741_824.0;
+    let mark = if gb < threshold_gb as f64 { " !" } else { "" };
+    format!("{gb:.0} GB{mark}")
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -22,6 +25,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             commands::disk_status,
             commands::memory_pressure,
@@ -33,6 +37,11 @@ pub fn run() {
             commands::open_in_finder,
             commands::open_activity_monitor,
             commands::quit_process,
+            commands::pipeline_scan,
+            commands::pipeline_run,
+            commands::pipeline_set_threshold,
+            commands::pipeline_edit_rules,
+            commands::empty_trash,
         ])
         .setup(|app| {
             // Build the tray menu.
@@ -89,13 +98,37 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Periodically update the tray title with current free disk %.
+            // Tray title shows free GB (with "!" under the threshold). Every 10
+            // minutes under the threshold, check the Pipeline rules and notify
+            // (at most once per `notify_every_hours`) when leftovers are ready.
             let tray_handle = tray.clone();
+            let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
+                use tauri_plugin_notification::NotificationExt;
+                let mut last_check = std::time::Instant::now() - Duration::from_secs(3600);
+                let mut last_notify: Option<std::time::Instant> = None;
                 loop {
                     let status = disk::status();
-                    let _ = tray_handle.set_title(Some(format_free_label(status.free_percent)));
-                    tokio::time::sleep(Duration::from_secs(30)).await;
+                    let cfg = pipeline::load_config().ok();
+                    let threshold = cfg.as_ref().map(|c| c.threshold_gb).unwrap_or(30);
+                    let _ = tray_handle.set_title(Some(format_free_label(status.free_bytes, threshold)));
+
+                    let low = status.free_bytes < threshold * 1_073_741_824;
+                    let every = Duration::from_secs(3600 * cfg.as_ref().map(|c| c.notify_every_hours).unwrap_or(6).max(1));
+                    let quiet = last_notify.map_or(true, |t| t.elapsed() >= every);
+                    if low && quiet && last_check.elapsed() >= Duration::from_secs(600) {
+                        last_check = std::time::Instant::now();
+                        let ready = tokio::task::spawn_blocking(pipeline::ready_bytes).await.unwrap_or(0);
+                        let gb = |b: u64| b as f64 / 1_073_741_824.0;
+                        let body = if ready >= 1_073_741_824 {
+                            format!("{:.0} GB free. {:.1} GB of pipeline leftovers are ready to clean.", gb(status.free_bytes), gb(ready))
+                        } else {
+                            format!("{:.0} GB free, under your {} GB line. No pipeline leftovers are ready yet.", gb(status.free_bytes), threshold)
+                        };
+                        let _ = app_handle.notification().builder().title("Disk Doctor: space is low").body(body).show();
+                        last_notify = Some(std::time::Instant::now());
+                    }
+                    tokio::time::sleep(Duration::from_secs(60)).await;
                 }
             });
 

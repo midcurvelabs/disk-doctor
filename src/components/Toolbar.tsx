@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "disk", label: "Disk" },
+  { id: "pipeline", label: "Pipeline" },
   { id: "memory", label: "Memory" },
 ];
 
@@ -33,7 +34,7 @@ export function Toolbar() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
-              "min-w-[78px] rounded-md px-3 py-1 text-[12px] font-medium transition-colors",
+              "min-w-[70px] rounded-md px-3 py-1 text-[12px] font-medium transition-colors",
               tab === t.id
                 ? "bg-surface-2 text-fg shadow-[0_1px_0_rgba(255,255,255,0.05),0_1px_2px_rgba(0,0,0,0.3)]"
                 : "text-fg-2 hover:text-fg"

@@ -56,6 +56,58 @@ export type CleanResult = {
   per_category: { id: string; recovered_bytes: number; error?: string }[];
 };
 
+export type PipelineItem = {
+  name: string;
+  path: string;
+  size_bytes: number;
+  file_count: number;
+  eligible: boolean;
+  reason: string;
+};
+
+export type PipelineRule = {
+  id: string;
+  label: string;
+  why: string;
+  tier: Tier;
+  action: "trash" | "offload";
+  root: string;
+  ready_bytes: number;
+  waiting_bytes: number;
+  items: PipelineItem[];
+  error: string | null;
+};
+
+export type PipelineScan = {
+  rules: PipelineRule[];
+  backup: { root: string; mounted: boolean; free_bytes: number };
+  trash_bytes: number;
+  threshold_gb: number;
+  config_path: string;
+};
+
+export type PipelineProgress = {
+  phase: string;
+  done_bytes: number;
+  total_bytes: number;
+  current: string;
+};
+
+export type PipelineRun = {
+  dry_run: boolean;
+  trashed_bytes: number;
+  copied_bytes: number;
+  rules: {
+    id: string;
+    trashed_bytes: number;
+    copied_bytes: number;
+    already_backed_bytes: number;
+    files: number;
+    errors: string[];
+  }[];
+  trash_bytes_after: number;
+};
+
 export const api = {
   diskStatus: () => invoke<DiskStatus>("disk_status"),
   memoryPressure: () => invoke<MemPressure>("memory_pressure"),
@@ -70,4 +122,11 @@ export const api = {
   openActivityMonitor: () => invoke<void>("open_activity_monitor"),
   quitProcess: (name: string, isAppBundle: boolean) =>
     invoke<number>("quit_process", { name, isAppBundle }),
+  pipelineScan: () => invoke<PipelineScan>("pipeline_scan"),
+  pipelineRun: (ids: string[], dryRun = false) =>
+    invoke<PipelineRun>("pipeline_run", { ids, dryRun }),
+  pipelineSetThreshold: (gb: number) =>
+    invoke<void>("pipeline_set_threshold", { gb }),
+  pipelineEditRules: () => invoke<void>("pipeline_edit_rules"),
+  emptyTrash: () => invoke<number>("empty_trash"),
 };

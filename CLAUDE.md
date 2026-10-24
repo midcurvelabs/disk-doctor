@@ -13,10 +13,10 @@ Ship Season 01, Day 6. Tauri 2 + Rust + React menubar app for macOS that audits 
 
 ## What we are NOT building (NON-GOALS for v1)
 - Windows or Linux support
-- Cleaning anything outside `~` (no `/Library`, no `/private/var`, no system caches)
+- Cleaning anything outside `~` (no `/Library`, no `/private/var`, no system caches). Exception (Rik, 24 Oct 2026): the Pipeline tab may clean the user's own items in `/private/tmp` and copy to the backup drive (`/Volumes/...`), see below
 - Touching browser user-data dirs (caches only)
 - Login Items / Launch Agents management
-- Auto-clean scheduling — P2
+- Auto-clean scheduling: still out. The Pipeline watcher only notifies; every clean is one click by Rik
 - Telemetry, auth, paywall, plugin ecosystem — all post-launch
 
 ## Source of truth
@@ -45,6 +45,14 @@ pnpm tauri dev           # local
 pnpm tauri build         # universal release
 ```
 
+## Pipeline tab (24 Oct 2026)
+Workflow-aware leftovers for Rik's video pipeline (RikGPT shorts, motion renders, render temp, Clip Desk boards, Codex logs). Code: `src-tauri/src/pipeline.rs`, UI `src/components/PipelineView.tsx`. Rules are data in `~/Library/Application Support/disk-doctor/pipeline.json` (seeded from `Config::default()` on first run; a new folder = one JSON rule, no code).
+- Gate: an item is offered only when its short is finished in a run-state file (`done_stages`) or nothing in it changed for `min_age_days`.
+- `trash` rules move files to the Trash. `offload` rules copy to the backup drive (`backup.root`/`offload_dir`/<rule>/<item>/), verify sha256, then trash the local file; a byte-identical copy already anywhere on the drive is reused (no copy). Nothing is removed before verification.
+- Watcher (lib.rs): tray title shows free GB (`!` under the threshold); under the threshold it checks the rules every 10 min and sends at most one notification per `notify_every_hours`. It never cleans on its own.
+- Check rules without the app: `cd src-tauri && cargo run --example pipeline_dry`. Tests: `cargo test --lib pipeline`.
+- Release builds keep build-time code unstripped (`[profile.release.build-override] strip = false`): `strip = true` corrupts proc-macro dylibs on macOS 27.
+
 ## Tauri command surface (locked at 7)
 ```rust
 disk_status() -> DiskStatus
@@ -57,3 +65,5 @@ open_in_finder(path: String) -> ()
 ```
 
 Do not add commands without updating the PRD.
+
+Added since v0.1 (Memory tab, then Pipeline tab on 24 Oct 2026): `top_processes`, `open_activity_monitor`, `quit_process`, `pipeline_scan`, `pipeline_run(ids, dry_run)` (emits `pipeline-progress`), `pipeline_set_threshold(gb)`, `pipeline_edit_rules`, `empty_trash`.

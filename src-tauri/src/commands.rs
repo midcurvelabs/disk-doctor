@@ -1,5 +1,65 @@
-use crate::{clean, disk, history, memory, scanner};
+use crate::{clean, disk, history, memory, pipeline, scanner};
 use std::process::Command;
+use tauri::Emitter;
+
+#[tauri::command]
+pub async fn pipeline_scan() -> Result<pipeline::Scan, String> {
+    tokio::task::spawn_blocking(pipeline::scan)
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
+}
+
+/// Runs the selected Pipeline rules. Emits `pipeline-progress` while it works.
+#[tauri::command]
+pub async fn pipeline_run(
+    app: tauri::AppHandle,
+    ids: Vec<String>,
+    dry_run: bool,
+) -> Result<pipeline::RunResult, String> {
+    tokio::task::spawn_blocking(move || {
+        let mut last = std::time::Instant::now() - std::time::Duration::from_secs(1);
+        pipeline::run(&ids, dry_run, &mut |p| {
+            // Throttle UI events to ~10 per second.
+            if last.elapsed().as_millis() >= 100 {
+                last = std::time::Instant::now();
+                let _ = app.emit("pipeline-progress", p);
+            }
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn pipeline_set_threshold(gb: u64) -> Result<(), String> {
+    let mut cfg = pipeline::load_config().map_err(|e| e.to_string())?;
+    cfg.threshold_gb = gb.clamp(5, 400);
+    pipeline::save_config(&cfg).map_err(|e| e.to_string())
+}
+
+/// Opens pipeline.json in the default text editor.
+#[tauri::command]
+pub fn pipeline_edit_rules() -> Result<(), String> {
+    pipeline::load_config().map_err(|e| e.to_string())?;
+    let path = pipeline::config_path().map_err(|e| e.to_string())?;
+    Command::new("open")
+        .arg("-t")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Empties the Trash so offloaded and trashed pipeline files actually free space.
+#[tauri::command]
+pub async fn empty_trash() -> Result<u64, String> {
+    tokio::task::spawn_blocking(pipeline::empty_trash)
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
+}
 
 #[tauri::command]
 pub fn disk_status() -> disk::DiskStatus {

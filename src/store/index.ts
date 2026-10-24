@@ -5,10 +5,14 @@ import {
   CleanResult,
   DiskStatus,
   MemPressure,
+  PipelineProgress,
+  PipelineRun,
+  PipelineScan,
 } from "@/lib/api";
 
 type Phase = "idle" | "scanning" | "results" | "cleaning" | "done";
-export type Tab = "disk" | "memory";
+export type Tab = "disk" | "pipeline" | "memory";
+type PipePhase = "idle" | "scanning" | "results" | "working" | "done";
 
 interface AppState {
   tab: Tab;
@@ -30,6 +34,19 @@ interface AppState {
   clear: () => void;
   cleanSelected: () => Promise<void>;
   cleanSafe: () => Promise<void>;
+
+  pipe: PipelineScan | null;
+  pipePhase: PipePhase;
+  pipeSelected: Set<string>;
+  pipeProgress: PipelineProgress | null;
+  pipeResult: PipelineRun | null;
+  pipeError: string | null;
+  pipeScan: () => Promise<void>;
+  pipeToggle: (id: string) => void;
+  pipeRun: () => Promise<void>;
+  pipeEmptyTrash: () => Promise<void>;
+  pipeSetProgress: (p: PipelineProgress) => void;
+  pipeBack: () => void;
 }
 
 export const useApp = create<AppState>((set, get) => ({
@@ -117,5 +134,62 @@ export const useApp = create<AppState>((set, get) => ({
     } catch (e) {
       set({ phase: "results", error: String(e) });
     }
+  },
+
+  pipe: null,
+  pipePhase: "idle",
+  pipeSelected: new Set(),
+  pipeProgress: null,
+  pipeResult: null,
+  pipeError: null,
+
+  pipeScan: async () => {
+    set({ pipePhase: "scanning", pipeError: null });
+    try {
+      const pipe = await api.pipelineScan();
+      // Keep only selections that still have something ready.
+      const ready = new Set(pipe.rules.filter((r) => r.ready_bytes > 0).map((r) => r.id));
+      const pipeSelected = new Set([...get().pipeSelected].filter((id) => ready.has(id)));
+      set({ pipe, pipeSelected, pipePhase: "results" });
+    } catch (e) {
+      set({ pipePhase: "idle", pipeError: String(e) });
+    }
+  },
+
+  pipeToggle: (id) => {
+    const next = new Set(get().pipeSelected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    set({ pipeSelected: next });
+  },
+
+  pipeRun: async () => {
+    const ids = [...get().pipeSelected];
+    if (ids.length === 0) return;
+    set({ pipePhase: "working", pipeProgress: null, pipeError: null });
+    try {
+      const pipeResult = await api.pipelineRun(ids, false);
+      set({ pipePhase: "done", pipeResult, pipeSelected: new Set() });
+      await get().refreshStatus();
+    } catch (e) {
+      set({ pipePhase: "results", pipeError: String(e) });
+    }
+  },
+
+  pipeEmptyTrash: async () => {
+    try {
+      await api.emptyTrash();
+    } catch (e) {
+      set({ pipeError: String(e) });
+    }
+    await get().refreshStatus();
+    await get().pipeScan();
+  },
+
+  pipeSetProgress: (pipeProgress) => set({ pipeProgress }),
+
+  pipeBack: () => {
+    set({ pipePhase: "idle", pipeResult: null });
+    get().pipeScan();
   },
 }));
