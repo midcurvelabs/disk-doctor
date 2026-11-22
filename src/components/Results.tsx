@@ -1,4 +1,5 @@
-import { FolderOpen, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FolderOpen, AlertCircle, RotateCw } from "lucide-react";
 import { useApp } from "@/store";
 import { api, CategoryResult, Tier } from "@/lib/api";
 import { formatBytes } from "@/lib/utils";
@@ -113,6 +114,47 @@ function Section({
   );
 }
 
+function ago(ts: number, now: number): string {
+  const s = Math.max(0, Math.round((now - ts) / 1000));
+  if (s < 60) return "just now";
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} h ago`;
+  return `${Math.round(h / 24)} d ago`;
+}
+
+function ScanBar() {
+  const scannedAt = useApp((s) => s.scannedAt);
+  const rescanning = useApp((s) => s.rescanning);
+  const rescan = useApp((s) => s.rescan);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="flex items-center justify-between px-4 pb-1 pt-0.5 text-[11px] text-fg-3">
+      <span className="tabular">
+        {rescanning
+          ? "Rescanning…"
+          : scannedAt
+            ? `Scanned ${ago(scannedAt, now)}`
+            : ""}
+      </span>
+      <button
+        onClick={rescan}
+        disabled={rescanning}
+        title="Scan again"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-blue hover:bg-surface hover:text-blue-2 disabled:opacity-50"
+      >
+        <RotateCw size={11} className={rescanning ? "animate-spin" : ""} />
+        Rescan
+      </button>
+    </div>
+  );
+}
+
 export function Results() {
   const cats = useApp((s) => s.categories);
   const selectedIds = useApp((s) => s.selectedIds);
@@ -137,6 +179,7 @@ export function Results() {
 
   return (
     <div className="flex h-full flex-col">
+      <ScanBar />
       <div className="flex-1 overflow-y-auto pt-1 pb-3">
         <Section tier={1} categories={byTier(1)} />
         <Section tier={2} categories={byTier(2)} />

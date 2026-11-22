@@ -23,12 +23,15 @@ interface AppState {
   categories: CategoryResult[];
   selectedIds: Set<string>;
   phase: Phase;
+  scannedAt: number | null;
+  rescanning: boolean;
   lastCleanResult: CleanResult | null;
   error: string | null;
 
   refreshStatus: () => Promise<void>;
   refreshMemory: () => Promise<void>;
   scan: () => Promise<void>;
+  rescan: () => Promise<void>;
   toggleSelect: (id: string) => void;
   selectTier: (tier: 1 | 2 | 3) => void;
   clear: () => void;
@@ -58,6 +61,8 @@ export const useApp = create<AppState>((set, get) => ({
   categories: [],
   selectedIds: new Set(),
   phase: "idle",
+  scannedAt: null,
+  rescanning: false,
   lastCleanResult: null,
   error: null,
 
@@ -83,9 +88,30 @@ export const useApp = create<AppState>((set, get) => ({
     set({ phase: "scanning", error: null });
     try {
       const categories = await api.scanAll();
-      set({ categories, phase: "results" });
+      set({ categories, phase: "results", scannedAt: Date.now() });
     } catch (e) {
       set({ phase: "idle", error: String(e) });
+    }
+  },
+
+  // Re-scan while the current list stays on screen. Keeps selections that
+  // still have something to clean.
+  rescan: async () => {
+    if (get().rescanning || get().phase === "scanning" || get().phase === "cleaning") return;
+    if (get().phase !== "results") {
+      await Promise.all([get().refreshStatus(), get().scan()]);
+      return;
+    }
+    set({ rescanning: true, error: null });
+    try {
+      const [categories] = await Promise.all([api.scanAll(), get().refreshStatus()]);
+      const live = new Set(
+        categories.filter((c) => c.size_bytes > 0 && !c.running_app_block).map((c) => c.id)
+      );
+      const selectedIds = new Set([...get().selectedIds].filter((id) => live.has(id)));
+      set({ categories, selectedIds, scannedAt: Date.now(), rescanning: false });
+    } catch (e) {
+      set({ rescanning: false, error: String(e) });
     }
   },
 
